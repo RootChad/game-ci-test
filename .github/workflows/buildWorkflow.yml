@@ -4,41 +4,48 @@ on:
     workflow_dispatch: {}
 
 jobs:
-  buildForAllSupportedPlatforms:
-    name: Build for ${{ matrix.targetPlatform }}
+  buildAndroid:
+    name: Build for Android 📱
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        targetPlatform:
-          #- StandaloneOSX # Build a macOS standalone (Intel 64-bit).
-          #- StandaloneWindows # Build a Windows standalone.
-          #- StandaloneWindows64 # Build a Windows 64-bit standalone.
-          #- StandaloneLinux64 # Build a Linux 64-bit standalone.
-          #- iOS # Build an iOS player.
-          - Android # Build an Android .apk standalone app.
-          #- WebGL # WebGL.
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create LFS file list
+        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+      - name: Restore LFS cache
+        uses: actions/cache@v2
+        id: lfs-cache
         with:
-          fetch-depth: 0
-          lfs: true
-      - uses: actions/cache@v2
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+
+      - name: Git LFS Pull
+        run: |
+          git lfs pull
+          git add .
+          git reset --hard
+      - name: Restore Library cache
+        uses: actions/cache@v2
         with:
           path: Library
-          key: Library-${{ matrix.targetPlatform }}
-          restore-keys: Library-
+          key: Library-build-Android
+          restore-keys: |
+            Library-build-
+            Library-
       - uses: game-ci/unity-builder@v2
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
-          targetPlatform: ${{ matrix.targetPlatform }}
+          targetPlatform: Android
+
       - uses: actions/upload-artifact@v2
         with:
-          name: Build-${{ matrix.targetPlatform }}
-          path: build/${{ matrix.targetPlatform }}
-deployPages:
-    needs: buildForAllSupportedPlatforms
+          name: build-Android
+          path: build/Android
+  deployPages:
+    needs: buildAndroid
     name: Deploy to Github Pages Android 🚀
     runs-on: ubuntu-latest
     steps:
