@@ -201,7 +201,7 @@ jobs:
         with:
           branch: gh-pages
           folder: build/WebGL
-    deployPageAndroid:
+  deployPageAndroid:
     needs: buildAndroid
     name: Deploy to Github Pages Android 🚀
     runs-on: ubuntu-latest
