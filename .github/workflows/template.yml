@@ -1,6 +1,7 @@
 name: GameCI Template 🎮
 
-on: workflow_dispatch: {}
+on: 
+   workflow_dispatch: {}
 
 env:
   UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
