@@ -65,15 +65,19 @@ jobs:
             - First Change
             - Second Change
         env:
-          GITHUB_TOKEN: ${{ github.token }}      
+          GITHUB_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-Android
+          path: build/Android
       - name: upload Android artifact
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./Android.zip
-          asset_name: Android.zip
+          asset_path: ./build-Android.zip
+          asset_name: build-Android.zip
           asset_content_type: application/zip
       
 
