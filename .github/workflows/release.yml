@@ -31,3 +31,8 @@ jobs:
             - Second Change
           draft: false
           prerelease: false
+      - name: Upload the artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: my-artifact
+          path: path/artifact.tar.gz
