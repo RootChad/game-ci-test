@@ -55,51 +55,7 @@ jobs:
         with:
           name: Test results (${{ matrix.testMode }})
           path: ${{ steps.testRunner.outputs.artifactsPath }}
-
   
-
-  buildWindows:
-    needs: testRunner
-    name: Build for Windows 🖥️
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Create LFS file list
-        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
-
-      - name: Restore LFS cache
-        uses: actions/cache@v2
-        id: lfs-cache
-        with:
-          path: .git/lfs
-          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
-
-      - name: Git LFS Pull
-        run: |
-          git lfs pull
-          git add .
-          git reset --hard
-      - name: Restore Library cache
-        uses: actions/cache@v2
-        with:
-          path: Library
-          key: Library-build-StandaloneWindows64
-          restore-keys: |
-            Library-build-
-            Library-
-      - uses: game-ci/unity-builder@v2
-        with:
-          targetPlatform: StandaloneWindows64
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: build-StandaloneWindows64
-          path: build/StandaloneWindows64
-
   buildAndroid:
     needs: testRunner
     name: Build for Android 📱
@@ -136,7 +92,27 @@ jobs:
       - uses: game-ci/unity-builder@v2
         with:
           targetPlatform: Android
-
+      - name: version
+        run: echo "::set-output name=version::$(./bin/CIRelease --version)"
+        id: version
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+          body_path: CHANGELOG.md
+      - name: upload Android artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/CIRelease.android.zip
+          asset_name: CIRelease.android.zip
+          asset_content_type: application/zip
       - uses: actions/upload-artifact@v2
         with:
           name: build-Android
